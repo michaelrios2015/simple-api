@@ -1,6 +1,7 @@
 const express = require('express');
 const { static } = express;
 const path = require('path');
+const axios = require("axios")
 
 const app = express();
 
@@ -10,7 +11,9 @@ app.get('/', (req, res, next)=> res.sendFile(path.join(__dirname, 'index.html'))
 
 app.get('/api/users', async(req, res, next)=> {
   try {
-    res.send(await User.findAll());
+    const data = (await axios.get('https://data.cityofnewyork.us/resource/hc8x-tcnd.json?$limit=10')).data
+    // console.log(data)
+    res.send(data);
   }
   catch(ex){
     next(ex);
@@ -19,7 +22,6 @@ app.get('/api/users', async(req, res, next)=> {
 
 const init = async()=> {
   try {
-    await syncAndSeed();
     const port = process.env.PORT || 3000;
     app.listen(port, ()=> console.log(`listening on port ${port}`));
   }
@@ -28,20 +30,5 @@ const init = async()=> {
   }
 };
 
-const Sequelize = require('sequelize');
-const { STRING } = Sequelize;
-const conn = new Sequelize(process.env.DATABASE_URL || 'postgres://postgres:JerryPine@localhost/acme_db');
-
-const User = conn.define('user', {
-  name: STRING 
-});
-const syncAndSeed = async()=> {
-  await conn.sync({ force: true });
-  await Promise.all([
-    User.create({ name: 'moe' }),
-    User.create({ name: 'larry' }),
-    User.create({ name: 'lucy' })
-  ]);
-};
 
 init();
